@@ -1,0 +1,306 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow
+!pip install tensorflow
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+import os
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+import tensorflow as tf
+from sklearn.preprocessing import OneHotEncoder
+from tensorflow.keras.datasets import cifar10
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.backend import image_data_format
+from keras.models import Sequential
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import f1_score
+from keras.models import Sequential
+#from mlxtend.plotting import plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
+from keras.layers import Dense
+from keras.layers import Conv2D, DepthwiseConv2D, SeparableConv2D
+from keras.layers import AvgPool2D, MaxPooling2D, Dropout, Flatten, BatchNormalization
+#from keras.constraints import maxnorm
+from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
+import matplotlib.pyplot as plt
+import numpy as np
+import copy
+import random
+import sys
+import glob
+import keras
+import cv2
+import csv
+import time
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from keras.callbacks import ModelCheckpoint
+
+
+from tensorflow import keras
+import segmentation_models as sm
+
+import tensorflow as tf
+import glob
+import cv2
+import os
+import numpy as np
+from sklearn.model_selection import train_test_split
+from matplotlib import pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow
+from tensorflow import keras
+from keras import Sequential
+from keras.layers import *
+from keras.models import *
+from keras.preprocessing import image
+import segmentation_models as sm
+
+import glob
+import cv2
+import os
+images_t = glob.glob("/content/drive/MyDrive/Dataset/Segmentation/Training/*.jpg")
+images_t.sort()
+images_v = glob.glob("/content/drive/MyDrive/Dataset/Segmentation/Testing/*.jpg")
+images_v.sort()
+masks_t = glob.glob("/content/drive/MyDrive/Dataset/Segmentation/All Segmentation Groundtruths/Training Set/5. Optic Disc/*.tif")
+masks_t.sort()
+masks_v = glob.glob("/content/drive/MyDrive/Dataset/Segmentation/All Segmentation Groundtruths/Testing Set/5. Optic Disc/*.tif")
+masks_v.sort()
+print(len(images_t))
+print(len(images_v))
+print(len(masks_t))
+print(len(masks_v))
+
+for x in images_t:
+    print(x)
+
+for x in masks_t:
+    print(x)
+
+import os
+image_t=[]
+image_v=[]
+mask_t=[]
+mask_v=[]
+for x in images_t:
+  im=cv2.imread(x,cv2.IMREAD_COLOR)
+  im=cv2.resize(im,(512,512))
+  image_t.append(im)
+for x in images_v:
+  im=cv2.imread(x,cv2.IMREAD_COLOR)
+  im=cv2.resize(im,(512,512))
+  image_v.append(im)
+for y in masks_t:
+  ma=cv2.imread(y,cv2.IMREAD_GRAYSCALE)
+  ma=cv2.resize(ma,(512,512),interpolation = cv2.INTER_NEAREST)
+  plt.imshow(ma)
+  mask_t.append(ma)
+for y in masks_v:
+  ma=cv2.imread(y,cv2.IMREAD_GRAYSCALE)
+  ma=cv2.resize(ma,(512,512),interpolation = cv2.INTER_NEAREST)
+  plt.imshow(ma)
+  mask_v.append(ma)
+
+print(len(image_t),len(mask_t))
+img_array_t=np.array(image_t)
+mask_array_t=np.array(mask_t)
+mask_array_t=np.expand_dims(mask_array_t,axis=-1)
+img_array_v=np.array(image_v)
+mask_array_v=np.array(mask_v)
+mask_array_v=np.expand_dims(mask_array_v,axis=-1)
+mask_array_t=mask_array_t.astype(np.float32)
+mask_array_v=mask_array_v.astype(np.float32)
+print(img_array_t.shape)
+print(mask_array_t.shape)
+print((np.unique(mask_array_t)))
+print(mask_array_t.shape)
+
+a=np.where(mask_array_t==76)
+mask_array_t[a]=1
+print(np.unique(mask_array_t))
+b=np.where(mask_array_v==76)
+mask_array_v[b]=1
+print(np.unique(mask_array_v))
+
+plt.imshow(mask_array_t[20])
+
+x_train=list()
+y_train=list()
+
+dgtrain =glob.glob('/content/drive/MyDrive/Dataset/Disease Grading/Training/*.jpg')
+ltrain =glob.glob('/content/drive/MyDrive/Dataset/Localization/Training/*.jpg')
+strain =glob.glob('/content/drive/MyDrive/Dataset/Segmentation/Training/*.jpg')
+for i in dgtrain:
+    img=cv2.imread(i,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_train.append(img)
+    y_train.append(0)
+for j in ltrain:
+    img=cv2.imread(j,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_train.append(img)
+    y_train.append(1)
+for k in strain:
+    img=cv2.imread(k,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_train.append(img)
+    y_train.append(2)
+x_train=np.asarray(x_train)
+y_train=np.asarray(y_train)
+y_train=to_categorical(y_train)
+x_train.shape
+y_train.shape
+
+x_test=list()
+y_test=list()
+dgtest = glob.glob('/content/drive/MyDrive/Dataset/Disease Grading/Testing/*.jpg')
+ltest =glob.glob('/content/drive/MyDrive/Dataset/Localization/Testing/*.jpg')
+stest =glob.glob('/content/drive/MyDrive/Dataset/Segmentation/Testing/*.jpg')
+for i in dgtest:
+    img=cv2.imread(i,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_test.append(img)
+    y_test.append(0)
+for j in ltest:
+    img=cv2.imread(j,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_test.append(img)
+    y_test.append(1)
+for k in stest:
+    img=cv2.imread(k,1)
+    img=cv2.resize(img,(150,150))
+    img=np.float32(img)
+    img/=255.0
+    img = img.reshape(150, 150, 3)
+    x_test.append(img)
+    y_test.append(2)
+x_test=np.asarray(x_test)
+y_test=np.asarray(y_test)
+y_test=to_categorical(y_test)
+x_test.shape
+y_test.shape
+
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D, BatchNormalization
+from keras.applications.densenet import DenseNet201
+#from keras.layers.convolutional import Conv2D
+from keras.layers import LSTM
+
+import numpy as np
+
+np.random.seed(1000)
+
+# Create a Sequential model
+model = Sequential()
+
+# Add the 1st Convolutional Layer to expand single-channel input to three channels
+model.add(Conv2D(filters=3, kernel_size=(1, 1), input_shape=(150, 150, 3)))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+
+# Add the DenseNet201 base model
+base_model = DenseNet201(include_top=False, input_shape=(150, 150, 3))
+model.add(base_model)
+
+# Flatten the input
+model.add(Flatten())
+
+# Add the 1st Fully Connected Layer
+model.add(Dense(4096))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+model.add(Dropout(0.4))
+
+# Add the 2nd Fully Connected Layer
+model.add(Dense(4096))
+model.add(BatchNormalization())
+model.add(Activation('relu'))
+model.add(Dropout(0.4))
+
+# Add the Output layer
+model.add(Dense(3))
+model.add(BatchNormalization())
+model.add(Activation('softmax'))
+
+# Print the model summary
+model.summary()
+model.compile(loss='categorical_crossentropy', optimizer=Adam(), metrics=['accuracy'])
+
+# Train the model with the specified training data, validation data, callbacks, and batch size
+history = model.fit(x_train, y_train, epochs=10)
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+pip install --upgrade scikit-learn
+
+
+ !sklearn.metrics.ConfusionMatrixDisplay
+
+
+
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
+
+# Assuming you have a test dataset (x_test and y_test)
+y_pred = model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+y_true = np.argmax(y_test, axis=1)
+
+# Classification Report
+print(classification_report(y_true, y_pred_classes))
+
+# Confusion Matrix
+confusion = confusion_matrix(y_true, y_pred_classes)
+print("Confusion Matrix:")
+print(confusion)
+
+# Plot Confusion Matrix
+plt.figure()
+plot_confusion_matrix(model, x_test, y_true, display_labels=["Class1", "Class2", "Class3"])
+plt.show()
+
+# Plot Training & Validation Loss (if you have training data)
+plt.figure()
+plt.plot(history.history['loss'], label='Training Loss')
+plt.title('Model Loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend()
+plt.show()
+
+# Plot Training & Validation Accuracy (if you have training data)
+plt.figure()
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend()
+plt.show()
